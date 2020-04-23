@@ -111,7 +111,7 @@ function processFile(jsonfile) {
             log('processFile(' + jsonfile +'): SUCCESS');
 
         } catch (e) {
-            log('processFile(' + jsonfile +'): ERROR: e');
+            log('processFile(' + jsonfile +'): ERROR: ' + e);
         }
 
         log('processFile(' + jsonfile +'): END');
