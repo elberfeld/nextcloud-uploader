@@ -1,0 +1,8 @@
+/.vscode
+/input
+/logs
+/node_modules
+/processed
+/testdata
+/*.js
+/*.map
