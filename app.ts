@@ -56,10 +56,13 @@ function processFile(jsonfile) {
             const invoice_number = (typeof jsondata.invoice_number == 'string' && jsondata.invoice_number.length > 0 ) ? jsondata.invoice_number : ""; 
             log('processFile(' + jsonfile +'): invoice_number = ' + invoice_number);
 
+            const currency = (typeof jsondata.currency == 'string' && jsondata.currency.length > 0 ) ? jsondata.currency : ""; 
+            log('processFile(' + jsonfile +'): currency = ' + currency);
+
 
             // Write to MySQL table
 
-            const mysql_update = "REPLACE INTO Rechnungen ( sender, date, amount, number, file ) VALUES ( '" + sender_name + "', '" + invoice_date + "', " + gross_amount + ", '" + invoice_number + "', '" + pdffile.replace(process.env.FOLDER_IN, "") + "')";
+            const mysql_update = "REPLACE INTO Rechnungen ( file, sender, date, amount, number, currency ) VALUES ( '" + pdffile.replace(process.env.FOLDER_IN, "") + "', '" + sender_name + "', '" + invoice_date + "', " + gross_amount + ", '" + invoice_number + "', '"+ currency + "' )";
             log('processFile(' + jsonfile +'): ' + mysql_update);
 
             log('processFile(' + jsonfile +'): Connecting to mysql: ' + process.env.MYSQL_DB);
@@ -139,7 +142,7 @@ function processFile(jsonfile) {
 
 
             // Move processed files 
-            
+
             fs.renameSync(jsonfile, jsonfile.replace(process.env.FOLDER_IN, process.env.FOLDER_PROCESSED) );
             log('processFile(' + jsonfile +'): moved jsonfile: ' + jsonfile.replace(process.env.FOLDER_IN, process.env.FOLDER_PROCESSED) );
 

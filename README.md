@@ -36,12 +36,14 @@ Die Konfiguration der Anwendung erfolgt über Umgebungsvariablen:
 
 # MySQL Tabelle 
 
+```
 CREATE TABLE Rechnungen (
+	file VARCHAR(1024) NOT NULL,
 	sender VARCHAR(255) NOT NULL,
 	date DATE NOT NULL,
 	amount DECIMAL(5,2) NULL DEFAULT NULL,
 	number VARCHAR(255) NULL DEFAULT NULL,
 	currency VARCHAR(10) NULL DEFAULT NULL,
-	file VARCHAR(1024) NULL DEFAULT NULL,
-	PRIMARY KEY (sender, date)
+	PRIMARY KEY (file)
 )
+```
