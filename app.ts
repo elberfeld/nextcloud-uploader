@@ -3,13 +3,14 @@ import cron = require('node-cron');
 import fs = require('fs')
 import format = require('date-format');
 import glob = require('glob');
+import MySQL = require('sync-mysql'); 
+
 import Client, { File, Folder, Tag, } from "nextcloud-node-client";
 
 	
 
 function log(message: string) {
 
-    const date = new Date();
     console.log(format(format.ISO8601_FORMAT, new Date()) + ' ' +message);
 }
 
@@ -36,12 +37,46 @@ function processFile(jsonfile) {
                 return;
             }
         
+            // Read JSON Data 
+
             const jsonraw  = fs.readFileSync(jsonfile,'utf8');
             log('processFile(' + jsonfile +'): ' + jsonraw);
 
             const jsondata = JSON.parse(jsonraw);
+
             const sender_name = (typeof jsondata.sender_name == 'string' && jsondata.sender_name.length > 0 ) ? jsondata.sender_name : "UNBEKANNT"; 
             log('processFile(' + jsonfile +'): sender_name = ' + sender_name);
+
+            const invoice_date = (typeof jsondata.invoice_date == 'string' && jsondata.invoice_date.length > 0 ) ? jsondata.invoice_date : format("yyyy-mm-dd", new Date()); 
+            log('processFile(' + jsonfile +'): invoice_date = ' + invoice_date);
+
+            const gross_amount = (typeof jsondata.gross_amount == 'number' ) ? jsondata.gross_amount : "NULL"; 
+            log('processFile(' + jsonfile +'): gross_amount = ' + gross_amount);
+
+            const invoice_number = (typeof jsondata.invoice_number == 'string' && jsondata.invoice_number.length > 0 ) ? jsondata.invoice_number : ""; 
+            log('processFile(' + jsonfile +'): invoice_number = ' + invoice_number);
+
+
+            // Write to MySQL table
+
+            const mysql_update = "REPLACE INTO Rechnungen ( sender, date, amount, number, file ) VALUES ( '" + sender_name + "', '" + invoice_date + "', " + gross_amount + ", '" + invoice_number + "', '" + pdffile.replace(process.env.FOLDER_IN, "") + "')";
+            log('processFile(' + jsonfile +'): ' + mysql_update);
+
+            log('processFile(' + jsonfile +'): Connecting to mysql: ' + process.env.MYSQL_DB);
+            
+            const mysql_con = new MySQL({
+                host: process.env.MYSQL_HOST,
+                port: process.env.MYSQL_PORT,
+                user: process.env.MYSQL_USER,
+                password: process.env.MYSQL_PASS,
+                database: process.env.MYSQL_DB
+            });
+
+            const mysql_result = mysql_con.query(mysql_update);
+            log('processFile(' + jsonfile +'): query sent, affectedRows = ' + mysql_result.affectedRows);
+
+
+            // Upload to NextCloud 
 
             log('processFile(' + jsonfile +'): connecting to NextCloud Server: ' + process.env.NEXTCLOUD_URL);
             const client = new Client();
@@ -102,6 +137,9 @@ function processFile(jsonfile) {
             await file.addTag(sender_name);
             log('processFile(' + jsonfile +'): tag added: ' + sender_name);
 
+
+            // Move processed files 
+            
             fs.renameSync(jsonfile, jsonfile.replace(process.env.FOLDER_IN, process.env.FOLDER_PROCESSED) );
             log('processFile(' + jsonfile +'): moved jsonfile: ' + jsonfile.replace(process.env.FOLDER_IN, process.env.FOLDER_PROCESSED) );
 
